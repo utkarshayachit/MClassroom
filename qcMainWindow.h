@@ -15,6 +15,10 @@ protected slots:
   void start();
   void stop();
 
+  void audioInput1Changed(int);
+  void audioInput2Changed(int);
+  void audioOutputChanged(int);
+
 protected:
   void queryAvailableDevices();
 
