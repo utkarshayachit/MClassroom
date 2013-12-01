@@ -6,6 +6,8 @@
 #include <map>
 #include <vector>
 
+#include "qcBuffer.h"
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -17,6 +19,7 @@ using std::endl;
 
 class qcMainWindow::qcInternals
 {
+  static qcBuffer<float, 2, 2> Buffer;
 public:
   Ui::QCMainWindow Ui;
 
@@ -79,7 +82,7 @@ public:
     };
 
   RtAudio Audio[3];
-  int BufferFrames;
+
   void startAudio()
     {
     unsigned long format = RTAUDIO_FLOAT32;
@@ -98,13 +101,26 @@ public:
     params[OUTPUT] = this->getStreamParameters(
       ui.audioOutput, ui.formatOutput, ui.rateOutput);
 
-    for (int cc=0; cc < OUTPUT; cc++)
+    for (int cc=0; cc <= OUTPUT; cc++)
       {
       if (params[cc].deviceId != -1)
         {
         unsigned int bufferFrames = 0;
-        this->Audio[cc].openStream(&params[OUTPUT], &params[cc], format, sampleRate,
-          &bufferFrames, qcInternals::streamCallback, this, &options);
+        if (cc == OUTPUT)
+          {
+          this->Audio[cc].openStream(&params[cc], NULL, format, sampleRate,
+            &bufferFrames, qcInternals::streamCallbackOutput, this, &options);
+          }
+        else if (cc == INPUT1)
+          {
+          this->Audio[cc].openStream(NULL, &params[cc], format, sampleRate,
+            &bufferFrames, qcInternals::streamCallbackInput1, this, &options);
+          }
+        else if (cc == INPUT2)
+          {
+          this->Audio[cc].openStream(NULL, &params[cc], format, sampleRate,
+            &bufferFrames, qcInternals::streamCallbackInput2, this, &options);
+          }
         this->Audio[cc].startStream();
         cout << "Using..." << endl;
         cout << "  Latency: " << this->Audio[cc].getStreamLatency() << endl;
@@ -124,6 +140,36 @@ public:
       }
     }
 
+  static int streamCallbackInput1(void *outputBuffer, void *inputBuffer,
+    unsigned int nFrames,
+    double streamTime,
+    RtAudioStreamStatus status, void *userData)
+    {
+    //cout << "Input: " << streamTime << ": " << nFrames << endl;
+    qcInternals::Buffer.push(0, reinterpret_cast<float*>(inputBuffer), nFrames);
+    return 0;
+    }
+
+  static int streamCallbackInput2(void *outputBuffer, void *inputBuffer,
+    unsigned int nFrames,
+    double streamTime,
+    RtAudioStreamStatus status, void *userData)
+    {
+    //cout << "Input: " << streamTime << ": " << nFrames << endl;
+    qcInternals::Buffer.push(1, reinterpret_cast<float*>(inputBuffer), nFrames);
+    return 0;
+    }
+
+  static int streamCallbackOutput(void *outputBuffer, void *inputBuffer,
+    unsigned int nFrames,
+    double streamTime,
+    RtAudioStreamStatus status, void *userData)
+    {
+    //cout << "Output: " << streamTime << ": " << nFrames << endl;
+    qcInternals::Buffer.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
+    return 0;
+    }
+
   static int streamCallback(void *outputBuffer, void *inputBuffer,
     unsigned int nFrames,
     double streamTime,
@@ -139,6 +185,8 @@ public:
     return 0;
     }
 };
+
+qcBuffer<float, 2, 2> qcMainWindow::qcInternals::Buffer;
 
 //-----------------------------------------------------------------------------
 qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
