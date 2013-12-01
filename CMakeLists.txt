@@ -5,6 +5,12 @@ find_package(Qt4 4.8 REQUIRED QtCore QtGui)
 include(${QT_USE_FILE})
 
 
+set(Boost_USE_STATIC_LIBS  ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+find_package(Boost REQUIRED thread system)
+
+
 #---------------------------------------------------------------------------------------------------------------------------------
 find_library(RTAUDIO_LIBRARY NAMES librtaudio)
 find_path(RTAUDIO_INCLUDE_DIR NAMES RtAudio.h)
@@ -28,4 +34,5 @@ add_executable(QtClassroom MACOSX_BUNDLE
   qcMainWindow.cxx
   ${moc_srs}
   ${ui_srcs})
-target_link_libraries(QtClassroom ${QT_LIBRARIES} ${RTAUDIO_LIBRARY})
+target_link_libraries(QtClassroom ${QT_LIBRARIES} ${RTAUDIO_LIBRARY}
+  ${Boost_LIBRARIES})

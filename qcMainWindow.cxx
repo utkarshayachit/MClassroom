@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 
-#include "qcBuffer.h"
 
 using std::cout;
 using std::cerr;
@@ -16,6 +15,8 @@ using std::endl;
 #include <QList>
 #include <QtDebug>
 #include <QPointer>
+
+#include "qcBuffer.h"
 
 class qcMainWindow::qcInternals
 {
