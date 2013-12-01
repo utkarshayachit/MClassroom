@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 
-
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -23,7 +22,6 @@ class qcMainWindow::qcInternals
   static qcBuffer<float, 2, 2> Buffer;
 public:
   Ui::QCMainWindow Ui;
-
 
   qcInternals(qcMainWindow* self)
     {

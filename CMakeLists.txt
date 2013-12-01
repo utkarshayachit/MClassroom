@@ -8,8 +8,8 @@ include(${QT_USE_FILE})
 set(Boost_USE_STATIC_LIBS  ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
-find_package(Boost REQUIRED thread system)
-
+find_package(Boost REQUIRED thread system
+                            timer chrono)
 
 #---------------------------------------------------------------------------------------------------------------------------------
 find_library(RTAUDIO_LIBRARY NAMES librtaudio)
