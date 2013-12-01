@@ -19,9 +19,7 @@ class qcMainWindow::qcInternals
 {
 public:
   Ui::QCMainWindow Ui;
-  RtAudio Input1;
-  RtAudio Input2;
-  RtAudio Output;
+
 
   qcInternals(qcMainWindow* self)
     {
@@ -61,6 +59,84 @@ public:
       {
       rate->addItem(QString::number(info.sampleRates[cc]), info.sampleRates[cc]);
       }
+    }
+
+  RtAudio::StreamParameters getStreamParameters(
+    QComboBox* device, QComboBox* format, QComboBox* rate)
+    {
+    RtAudio::StreamParameters params;
+    params.deviceId = device->itemData(device->currentIndex()).toInt();
+    params.nChannels = 2;
+    params.firstChannel = 0;
+    return params;
+    }
+
+  enum
+    {
+    INPUT1 = 0,
+    INPUT2 = 1,
+    OUTPUT = 2
+    };
+
+  RtAudio Audio[3];
+  int BufferFrames;
+  void startAudio()
+    {
+    unsigned long format = RTAUDIO_FLOAT32;
+    unsigned int sampleRate = 44100;
+
+    RtAudio::StreamOptions options;
+    options.flags = RTAUDIO_MINIMIZE_LATENCY;
+
+    Ui::QCMainWindow& ui = this->Ui;
+
+    RtAudio::StreamParameters params[3];
+    params[INPUT1] = this->getStreamParameters(
+      ui.audioInput1, ui.formatInput1, ui.rateInput1);
+    params[INPUT2] = this->getStreamParameters(
+      ui.audioInput2, ui.formatInput2, ui.rateInput2);
+    params[OUTPUT] = this->getStreamParameters(
+      ui.audioOutput, ui.formatOutput, ui.rateOutput);
+
+    for (int cc=0; cc < OUTPUT; cc++)
+      {
+      if (params[cc].deviceId != -1)
+        {
+        unsigned int bufferFrames = 0;
+        this->Audio[cc].openStream(&params[OUTPUT], &params[cc], format, sampleRate,
+          &bufferFrames, qcInternals::streamCallback, this, &options);
+        this->Audio[cc].startStream();
+        cout << "Using..." << endl;
+        cout << "  Latency: " << this->Audio[cc].getStreamLatency() << endl;
+        cout << "  Buffer Frames: " << bufferFrames << endl;
+        }
+      }
+    }
+
+  void stopAudio()
+    {
+    for (int cc=0; cc <= OUTPUT;cc++)
+      {
+      if (this->Audio[cc].isStreamOpen())
+        {
+        this->Audio[cc].closeStream();
+        }
+      }
+    }
+
+  static int streamCallback(void *outputBuffer, void *inputBuffer,
+    unsigned int nFrames,
+    double streamTime,
+    RtAudioStreamStatus status, void *userData)
+    {
+    // Since the number of input and output channels is equal, we can do
+    // a simple buffer copy operation here.
+    if ( status ) std::cout << "Stream over/underflow detected." << std::endl;
+    qcInternals* self = reinterpret_cast<qcInternals*>(userData);
+
+    unsigned long bytes = nFrames * 2 * 4;
+    memcpy( outputBuffer, inputBuffer, bytes );
+    return 0;
     }
 };
 
@@ -198,6 +274,17 @@ void qcMainWindow::start()
   Ui::QCMainWindow &ui = this->Internals->Ui;
   ui.stopButton->setEnabled(true);
   ui.startButton->setEnabled(false);
+  ui.audioInput1->setEnabled(false);
+  ui.audioInput2->setEnabled(false);
+  ui.audioOutput->setEnabled(false);
+  ui.formatInput1->setEnabled(false);
+  ui.formatInput2->setEnabled(false);
+  ui.formatOutput->setEnabled(false);
+  ui.rateInput1->setEnabled(false);
+  ui.rateInput2->setEnabled(false);
+  ui.rateOutput->setEnabled(false);
+
+  this->Internals->startAudio();
 }
 
 //-----------------------------------------------------------------------------
@@ -206,6 +293,16 @@ void qcMainWindow::stop()
   Ui::QCMainWindow &ui = this->Internals->Ui;
   ui.stopButton->setEnabled(false);
   ui.startButton->setEnabled(true);
+  ui.audioInput1->setEnabled(true);
+  ui.audioInput2->setEnabled(true);
+  ui.audioOutput->setEnabled(true);
+  ui.formatInput1->setEnabled(true);
+  ui.formatInput2->setEnabled(true);
+  ui.formatOutput->setEnabled(true);
+  ui.rateInput1->setEnabled(true);
+  ui.rateInput2->setEnabled(true);
+  ui.rateOutput->setEnabled(true);
+  this->Internals->stopAudio();
 }
 
 //-----------------------------------------------------------------------------

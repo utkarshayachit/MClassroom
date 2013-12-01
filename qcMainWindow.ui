@@ -58,7 +58,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Audio Input #1:</string>
+         <string>Voice Input (required)</string>
         </property>
        </widget>
       </item>
@@ -68,7 +68,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Audio Input #2:</string>
+         <string>Tanpura (optional)</string>
         </property>
        </widget>
       </item>
@@ -78,7 +78,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Audio Output</string>
+         <string>Audio Output (required)</string>
         </property>
        </widget>
       </item>
