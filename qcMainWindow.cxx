@@ -16,10 +16,12 @@ using std::endl;
 #include <QPointer>
 
 #include "qcBuffer.h"
+#include "qcDispatcher.h"
 
 class qcMainWindow::qcInternals
 {
   static qcBuffer<float, 2, 2> Buffer;
+  static qcDispatcher<float, 2> Dispatcher;
 public:
   Ui::QCMainWindow Ui;
 
@@ -85,7 +87,7 @@ public:
   void startAudio()
     {
     unsigned long format = RTAUDIO_FLOAT32;
-    unsigned int sampleRate = 44100;
+    unsigned int sampleRate = 48000;
 
     RtAudio::StreamOptions options;
     options.flags = RTAUDIO_MINIMIZE_LATENCY;
@@ -164,28 +166,17 @@ public:
     double streamTime,
     RtAudioStreamStatus status, void *userData)
     {
-    //cout << "Output: " << streamTime << ": " << nFrames << endl;
+    cout << "Output: " << streamTime << ": " << nFrames << endl;
     qcInternals::Buffer.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
-    return 0;
-    }
 
-  static int streamCallback(void *outputBuffer, void *inputBuffer,
-    unsigned int nFrames,
-    double streamTime,
-    RtAudioStreamStatus status, void *userData)
-    {
-    // Since the number of input and output channels is equal, we can do
-    // a simple buffer copy operation here.
-    if ( status ) std::cout << "Stream over/underflow detected." << std::endl;
-    qcInternals* self = reinterpret_cast<qcInternals*>(userData);
-
-    unsigned long bytes = nFrames * 2 * 4;
-    memcpy( outputBuffer, inputBuffer, bytes );
+    // also push the data to the dispatcher.
+    Dispatcher.pushRawData(reinterpret_cast<float*>(outputBuffer), nFrames);
     return 0;
     }
 };
 
 qcBuffer<float, 2, 2> qcMainWindow::qcInternals::Buffer;
+qcDispatcher<float, 2> qcMainWindow::qcInternals::Dispatcher;
 
 //-----------------------------------------------------------------------------
 qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
