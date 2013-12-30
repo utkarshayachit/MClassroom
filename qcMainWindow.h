@@ -18,6 +18,7 @@ protected slots:
   void audioInput1Changed(int);
   void audioInput2Changed(int);
   void audioOutputChanged(int);
+  void gainChanged(int gain);
 
   void startServer();
   void connectToServer();

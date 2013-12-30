@@ -170,8 +170,8 @@ private:
 
     opus_int32 bytes = opus_encode_float(
       this->Encoder, this->EncodingBuffer, framesToEncode, data, numBytes);
-    cout << "Encoded  " << framesToEncode << " frames as "
-      << bytes << " bytes" << endl;
+    //cout << "Encoded  " << framesToEncode << " frames as "
+    //  << bytes << " bytes" << endl;
     return bytes;
     }
 };

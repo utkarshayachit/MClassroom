@@ -11,11 +11,12 @@ template <class T, unsigned int numFeeders, unsigned int numChannelsPerFeeder>
 class qcBuffer
 {
   template<class InputIterator, class OutputIterator>
-    OutputIterator copy (InputIterator first, InputIterator last, OutputIterator result)
+    OutputIterator copy (double gain,
+      InputIterator first, InputIterator last, OutputIterator result)
       {
       while (first!=last)
         {
-        *result += *first;
+        *result += gain * (*first);
         ++result; ++first;
         }
       return result;
@@ -23,13 +24,23 @@ class qcBuffer
 private:
   boost::circular_buffer<T> Buffers[numFeeders];
   boost::mutex Mutex[numFeeders];
+  double Gain[numFeeders];
 public:
   qcBuffer()
     {
     for (unsigned int cc=0; cc < numFeeders; cc++)
       {
+      this->Gain[cc] = 0.5;
       this->Buffers[cc].set_capacity(2880*numChannelsPerFeeder);
       }
+    }
+
+  void setGain(int index, double gain)
+    {
+    assert(index < numFeeders);
+    boost::mutex &mutex = this->Mutex[index];
+    boost::mutex::scoped_lock lock(mutex);
+    this->Gain[index] = gain;
     }
 
   // @threadsafe(as long as different threads use different index)
@@ -60,7 +71,8 @@ public:
         static_cast<unsigned int>(numFrames*numChannelsPerFeeder),
         static_cast<unsigned int>(buffer.size()));
 
-      qcBuffer::copy(buffer.begin(), buffer.begin() + count, data);
+      qcBuffer::copy(this->Gain[index],
+        buffer.begin(), buffer.begin() + count, data);
       buffer.erase_begin(count);
       lock.unlock();
       }

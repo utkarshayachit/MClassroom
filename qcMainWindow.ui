@@ -6,55 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>562</width>
-    <height>399</height>
+    <width>654</width>
+    <height>436</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Music Lesson</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QFrame" name="frame">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QFrame" name="frame_2">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Instructions&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Step One: &lt;/span&gt;Select your input(s) and output&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+     </widget>
     </item>
     <item>
-     <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0,0">
-      <item row="0" column="3">
-       <widget class="QComboBox" name="rateInput1">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QComboBox" name="rateOutput">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
+     <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,0,0">
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -62,8 +34,22 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="audioInput1"/>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="audioOutput">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Audio Output (required)</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
@@ -73,22 +59,70 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QComboBox" name="audioInput2"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Audio Output (required)</string>
+       <widget class="QComboBox" name="audioInput2">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QComboBox" name="audioOutput"/>
+      <item row="1" column="4">
+       <widget class="QDial" name="gainInput2">
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="invertedAppearance">
+         <bool>false</bool>
+        </property>
+        <property name="invertedControls">
+         <bool>false</bool>
+        </property>
+        <property name="wrapping">
+         <bool>false</bool>
+        </property>
+        <property name="notchesVisible">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QComboBox" name="formatInput1">
+      <item row="0" column="4">
+       <widget class="QDial" name="gainInput1">
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="notchesVisible">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="audioInput1">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QComboBox" name="rateOutput">
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
         </property>
        </widget>
       </item>
@@ -97,6 +131,12 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
@@ -104,12 +144,112 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QComboBox" name="formatInput1">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QComboBox" name="rateInput1">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
        </widget>
       </item>
       <item row="1" column="2">
        <widget class="QComboBox" name="formatInput2">
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QComboBox" name="formatRemote">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QComboBox" name="rateRemote">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Remote Input</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QDial" name="gainRemote">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="notchesVisible">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="audioRemote">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>5</number>
         </property>
        </widget>
       </item>
@@ -143,7 +283,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>562</width>
+     <width>654</width>
      <height>22</height>
     </rect>
    </property>
@@ -165,6 +305,20 @@
    <addaction name="menuNetwork"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionConnect_To_Server"/>
+   <addaction name="actionStart_Server"/>
+   <addaction name="actionDisconnect"/>
+  </widget>
   <action name="actionExit">
    <property name="text">
     <string>E&amp;xit</string>
@@ -175,12 +329,12 @@
   </action>
   <action name="actionConnect_To_Server">
    <property name="text">
-    <string>Connect To Server</string>
+    <string>Connect To Remote</string>
    </property>
   </action>
   <action name="actionStart_Server">
    <property name="text">
-    <string>Start Server</string>
+    <string>Listen to Remote</string>
    </property>
   </action>
   <action name="actionDisconnect">

@@ -198,6 +198,14 @@ qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
   this->connect(ui.actionStart_Server, SIGNAL(triggered()), SLOT(startServer()));
   this->connect(ui.actionConnect_To_Server, SIGNAL(triggered()), SLOT(connectToServer()));
   this->connect(ui.actionDisconnect, SIGNAL(triggered()), SLOT(disconnect()));
+
+  ui.gainInput1->setProperty("Index", QVariant(0));
+  ui.gainInput2->setProperty("Index", QVariant(1));
+  ui.gainRemote->setProperty("Index", QVariant(2));
+
+  this->connect(ui.gainInput1, SIGNAL(valueChanged(int)), SLOT(gainChanged(int)));
+  this->connect(ui.gainInput2, SIGNAL(valueChanged(int)), SLOT(gainChanged(int)));
+  this->connect(ui.gainRemote, SIGNAL(valueChanged(int)), SLOT(gainChanged(int)));
 }
 
 //-----------------------------------------------------------------------------
@@ -310,6 +318,17 @@ void qcMainWindow::audioOutputChanged(int index)
 }
 
 //-----------------------------------------------------------------------------
+void qcMainWindow::gainChanged(int gain)
+{
+  QDial* sender = qobject_cast<QDial*>(this->sender());
+  if (sender && sender->property("Index").isValid())
+    {
+    qcApp::AudioStream.setGain(
+      sender->property("Index").toInt(), gain/100.0);
+    }
+}
+
+//-----------------------------------------------------------------------------
 void qcMainWindow::start()
 {
   Ui::QCMainWindow &ui = this->Internals->Ui;
@@ -354,7 +373,11 @@ void qcMainWindow::startServer()
 
   Ui::QCMainWindow &ui = this->Internals->Ui;
   ui.actionDisconnect->setEnabled(true);
-  ui.actionConnect_To_Server->setEnabled(false);
+  ui.actionStart_Server->setEnabled(false);
+
+  ui.gainRemote->setEnabled(true);
+  ui.audioRemote->addItem("When connected");
+
   delete this->Internals->Receiver;
   this->Internals->Receiver = new qcReceiver<float, 2>(portNumber);
 }
@@ -380,6 +403,8 @@ void qcMainWindow::disconnect()
   ui.actionDisconnect->setEnabled(false);
   ui.actionConnect_To_Server->setEnabled(true);
   ui.actionStart_Server->setEnabled(true);
+  ui.gainRemote->setEnabled(false);
+  ui.audioRemote->clear();
 
   delete this->Internals->Receiver;
   this->Internals->Receiver = NULL;
