@@ -31,7 +31,7 @@ endif()
 
 qt4_wrap_cpp(moc_srs
   qcMainWindow.h
-  qcNetwork.h
+  qcReceiver.h
 )
 
 qt4_wrap_ui(ui_srcs
@@ -46,8 +46,7 @@ add_executable(QtClassroom MACOSX_BUNDLE
   qcApp.h
   qcMainWindow.cxx
   qcMainWindow.h
-  qcNetwork.cxx
-  qcNetwork.h
+  qcReceiver.h
   ${moc_srs}
   ${ui_srcs})
 target_link_libraries(QtClassroom ${QT_LIBRARIES}

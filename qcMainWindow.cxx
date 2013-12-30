@@ -14,22 +14,21 @@
 
 #include "qcApp.h"
 #include "qcBuffer.h"
-#include "qcNetwork.h"
+#include "qcReceiver.h"
 
 class qcMainWindow::qcInternals
 {
-  static qcBuffer<float, 3, 2> Buffer;
 public:
   Ui::QCMainWindow Ui;
-  QPointer<qcNetwork> Network;
+  qcReceiver<float, 2>* Receiver;
 
-  qcInternals(qcMainWindow* self)
+  qcInternals(qcMainWindow* self) : Receiver(NULL)
     {
     this->Ui.setupUi(self);
     }
   ~qcInternals()
     {
-    delete this->Network;
+    delete this->Receiver;
     }
 
   void updateUi(RtAudio::DeviceInfo& info, QComboBox* format, QComboBox* rate)
@@ -151,7 +150,7 @@ public:
     RtAudioStreamStatus status, void *userData)
     {
     //cout << "Input: " << streamTime << ": " << nFrames << endl;
-    qcInternals::Buffer.push(0, reinterpret_cast<float*>(inputBuffer), nFrames);
+    qcApp::AudioStream.push(0, reinterpret_cast<float*>(inputBuffer), nFrames);
     return 0;
     }
 
@@ -161,7 +160,7 @@ public:
     RtAudioStreamStatus status, void *userData)
     {
     //cout << "Input: " << streamTime << ": " << nFrames << endl;
-    qcInternals::Buffer.push(1, reinterpret_cast<float*>(inputBuffer), nFrames);
+    qcApp::AudioStream.push(1, reinterpret_cast<float*>(inputBuffer), nFrames);
     return 0;
     }
 
@@ -171,7 +170,7 @@ public:
     RtAudioStreamStatus status, void *userData)
     {
     cout << "Output: " << streamTime << ": " << nFrames << endl;
-    qcInternals::Buffer.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
+    qcApp::AudioStream.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
 
     // also push the data to the dispatcher.
     qcApp::Dispatcher.pushRawData(reinterpret_cast<float*>(outputBuffer), nFrames);
@@ -179,7 +178,6 @@ public:
     }
 };
 
-qcBuffer<float, 3, 2> qcMainWindow::qcInternals::Buffer;
 
 //-----------------------------------------------------------------------------
 qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
@@ -357,12 +355,8 @@ void qcMainWindow::startServer()
   Ui::QCMainWindow &ui = this->Internals->Ui;
   ui.actionDisconnect->setEnabled(true);
   ui.actionConnect_To_Server->setEnabled(false);
-  if (this->Internals->Network == NULL)
-    {
-    this->Internals->Network = new qcNetwork(this);
-    }
-  this->Internals->Network->startServer(
-    QHostAddress::LocalHost, portNumber);
+  delete this->Internals->Receiver;
+  this->Internals->Receiver = new qcReceiver<float, 2>(portNumber);
 }
 
 //-----------------------------------------------------------------------------
@@ -387,10 +381,8 @@ void qcMainWindow::disconnect()
   ui.actionConnect_To_Server->setEnabled(true);
   ui.actionStart_Server->setEnabled(true);
 
-  if (this->Internals->Network)
-    {
-    delete this->Internals->Network;
-    }
+  delete this->Internals->Receiver;
+  this->Internals->Receiver = NULL;
 
   // clear destination.
   qcApp::Dispatcher.setDestination(QHostAddress(), 0);

@@ -7,6 +7,7 @@ using std::cerr;
 using std::endl;
 
 #include "qcDispatcher.h"
+#include "qcBuffer.h"
 
 // Storage for application globals.
 class qcApp
@@ -16,5 +17,6 @@ public:
   virtual ~qcApp();
 
   static qcDispatcher<float, 2> Dispatcher;
+  static qcBuffer<float, 3, 2> AudioStream;
 };
 #endif
