@@ -169,7 +169,7 @@ public:
     double streamTime,
     RtAudioStreamStatus status, void *userData)
     {
-    cout << "Output: " << streamTime << ": " << nFrames << endl;
+    //cout << "Output: " << streamTime << ": " << nFrames << endl;
     qcApp::AudioStream.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
 
     // also push the data to the dispatcher.

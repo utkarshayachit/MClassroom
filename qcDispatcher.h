@@ -45,7 +45,6 @@ protected:
     {
     unsigned char *data = new unsigned char[1024];
     QUdpSocket sendSocket;
-    // FIXME: add logic to terminate gracefully.
     while (unsigned int packet_size = this->Self.popEncodedData(data, 1024))
       {
       std::pair<QHostAddress, quint16> reply = this->Self.destination();
@@ -56,12 +55,14 @@ protected:
         }
       }
     delete [] data;
+    cout << "Quitting receiver thread." << endl;
     }
 private:
   Q_DISABLE_COPY(qcDispatcherThread);
   };
 
   qcDispatcherThread SenderThread;
+  bool Abort;
 public:
   qcDispatcher() :
     EncodingBuffer(new T[2880 * numChannels]), // maximum frame size per encode call.
@@ -77,8 +78,11 @@ public:
     }
   virtual ~qcDispatcher()
     {
-    // FIXME: stop thread gracefully.
-    this->SenderThread.terminate();
+      {
+      // stop thread gracefully.
+      boost::mutex::scoped_lock lock(this->BufferMutex);
+      this->Abort = true;
+      }
     this->SenderThread.wait();
 
     opus_encoder_destroy(this->Encoder);
@@ -112,14 +116,11 @@ public:
   void pushRawData(T* data, const unsigned int numFrames)
     {
     this->Buffer.push(0, data, numFrames);
-    if (this->bufferNotEmpty())
-      {
-      this->BufferNotEmpty.notify_one();
-      }
+    this->BufferNotEmpty.notify_one();
     }
 
 private:
-  bool bufferNotEmpty() { return this->Buffer.availableFrames() >= 2880; }
+  bool bufferNotEmpty() { return this->Buffer.availableFrames() >= 120; }
 
   // @threadsafe
   // pop encoded packet from the queue upto numBytes. This call will block until
@@ -127,15 +128,26 @@ private:
   unsigned int popEncodedData(unsigned char* data, const unsigned int numBytes)
     {
     boost::mutex::scoped_lock lock(this->BufferMutex);
-    this->BufferNotEmpty.wait(lock,
-      boost::bind(&qcDispatcher<T, numChannels>::bufferNotEmpty, this));
+    while (!this->BufferNotEmpty.timed_wait(lock,
+      boost::posix_time::seconds(0.1),
+      boost::bind(&qcDispatcher<T, numChannels>::bufferNotEmpty, this)))
+      {
+      // timed out.
+      if (this->Abort)
+        {
+        return 0;
+        }
+      }
+    if (this->Abort)
+      {
+      return 0;
+      }
     lock.unlock();
 
     // opus needs exactly 2.5, 5, 10, 20, 40, or 60 ms of audio per encode call.
     // so for 48000Hz sample rate, we have
     static const double validFrameCounts[] =
-//      {120, 240, 480, 960, 1920, 2880};
-        {2880, 1920, 960, /*480, 240, 120,*/ 0};
+        {2880, 1920, 960, 480, 240, 120, 0};
 
     unsigned int availableFrames = this->Buffer.availableFrames();
     unsigned int framesToEncode = 0;
