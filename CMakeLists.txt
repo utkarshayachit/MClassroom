@@ -4,7 +4,7 @@ project(QtClassroom)
 # note: it is planned that a future version of CMake will enable this by default
 set(CMAKE_MACOSX_RPATH 1)
 
-find_package(Qt4 4.8 REQUIRED QtCore QtGui)
+find_package(Qt4 4.8 REQUIRED QtCore QtGui QtNetwork)
 include(${QT_USE_FILE})
 
 
@@ -31,6 +31,7 @@ endif()
 
 qt4_wrap_cpp(moc_srs
   qcMainWindow.h
+  qcNetwork.h
 )
 
 qt4_wrap_ui(ui_srcs
@@ -41,8 +42,12 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${RTAUDIO_INCLUDE_DIR}
                     ${OPUS_INCLUDE_DIR})
 add_executable(QtClassroom MACOSX_BUNDLE
-  qcMainWindow.h
+  qcApp.cxx
+  qcApp.h
   qcMainWindow.cxx
+  qcMainWindow.h
+  qcNetwork.cxx
+  qcNetwork.h
   ${moc_srs}
   ${ui_srcs})
 target_link_libraries(QtClassroom ${QT_LIBRARIES}

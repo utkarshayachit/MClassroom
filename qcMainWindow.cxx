@@ -2,32 +2,34 @@
 #include "ui_qcMainWindow.h"
 
 #include "RtAudio.h"
-#include <iostream>
 #include <map>
 #include <vector>
 
-using std::cout;
-using std::cerr;
-using std::endl;
 
 #include <QApplication>
 #include <QList>
 #include <QtDebug>
 #include <QPointer>
+#include <QInputDialog>
 
+#include "qcApp.h"
 #include "qcBuffer.h"
-#include "qcDispatcher.h"
+#include "qcNetwork.h"
 
 class qcMainWindow::qcInternals
 {
   static qcBuffer<float, 2, 2> Buffer;
-  static qcDispatcher<float, 2> Dispatcher;
 public:
   Ui::QCMainWindow Ui;
+  QPointer<qcNetwork> Network;
 
   qcInternals(qcMainWindow* self)
     {
     this->Ui.setupUi(self);
+    }
+  ~qcInternals()
+    {
+    delete this->Network;
     }
 
   void updateUi(RtAudio::DeviceInfo& info, QComboBox* format, QComboBox* rate)
@@ -170,13 +172,12 @@ public:
     qcInternals::Buffer.pop(reinterpret_cast<float*>(outputBuffer), nFrames);
 
     // also push the data to the dispatcher.
-    Dispatcher.pushRawData(reinterpret_cast<float*>(outputBuffer), nFrames);
+    qcApp::Dispatcher.pushRawData(reinterpret_cast<float*>(outputBuffer), nFrames);
     return 0;
     }
 };
 
 qcBuffer<float, 2, 2> qcMainWindow::qcInternals::Buffer;
-qcDispatcher<float, 2> qcMainWindow::qcInternals::Dispatcher;
 
 //-----------------------------------------------------------------------------
 qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
@@ -194,6 +195,9 @@ qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
 
   QObject::connect(ui.startButton, SIGNAL(clicked()), this, SLOT(start()));
   QObject::connect(ui.stopButton, SIGNAL(clicked()), this, SLOT(stop()));
+  this->connect(ui.actionStart_Server, SIGNAL(triggered()), SLOT(startServer()));
+  this->connect(ui.actionConnect_To_Server, SIGNAL(triggered()), SLOT(connectToServer()));
+  this->connect(ui.actionDisconnect, SIGNAL(triggered()), SLOT(disconnect()));
 }
 
 //-----------------------------------------------------------------------------
@@ -202,7 +206,6 @@ qcMainWindow::~qcMainWindow()
   delete this->Internals;
   this->Internals = NULL;
 }
-
 
 //-----------------------------------------------------------------------------
 void qcMainWindow::queryAvailableDevices()
@@ -344,9 +347,59 @@ void qcMainWindow::stop()
 }
 
 //-----------------------------------------------------------------------------
+void qcMainWindow::startServer()
+{
+  int portNumber = QInputDialog::getInt(this, "Server Port Number",
+    "Enter Server Port Number: ", 11111, 1000);
+
+  Ui::QCMainWindow &ui = this->Internals->Ui;
+  ui.actionDisconnect->setEnabled(true);
+  ui.actionConnect_To_Server->setEnabled(false);
+  if (this->Internals->Network == NULL)
+    {
+    this->Internals->Network = new qcNetwork(this);
+    }
+  this->Internals->Network->startServer(
+    QHostAddress::LocalHost, portNumber);
+}
+
+//-----------------------------------------------------------------------------
+void qcMainWindow::connectToServer()
+{
+  int portNumber = QInputDialog::getInt(this, "Remote Server Port Number",
+    "Enter Remote Server Port Number: ", 11112, 1000);
+  Ui::QCMainWindow &ui = this->Internals->Ui;
+  ui.actionDisconnect->setEnabled(true);
+  ui.actionConnect_To_Server->setEnabled(false);
+
+  if (this->Internals->Network == NULL)
+    {
+    this->Internals->Network = new qcNetwork(this);
+    }
+  this->Internals->Network->connectToHost(
+    QHostAddress::LocalHost, portNumber);
+}
+
+//-----------------------------------------------------------------------------
+void qcMainWindow::disconnect()
+{
+  Ui::QCMainWindow &ui = this->Internals->Ui;
+  ui.actionDisconnect->setEnabled(false);
+  ui.actionConnect_To_Server->setEnabled(true);
+  ui.actionStart_Server->setEnabled(true);
+
+  if (this->Internals->Network)
+    {
+    delete this->Internals->Network;
+    }
+}
+
+//-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
   QApplication app(argc, argv);
+  qcApp qcapp;
+
   qcMainWindow mainWindow;
   mainWindow.show();
   return app.exec();

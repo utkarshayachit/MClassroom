@@ -2,6 +2,9 @@
 #define __qcDispatcher_h
 
 #include "qcBuffer.h"
+
+#include <map>
+#include <vector>
 #include <opus/opus.h>
 
 #include <boost/circular_buffer.hpp>
@@ -85,7 +88,7 @@ public:
   // @threadsafe
   // pop encoded packet from the queue upto numBytes. This call will block until
   // some encoded data becomes available. Returns the number of bytes popped.
-  unsigned int popEncodedData(T* data, const unsigned int numBytes)
+  unsigned int popEncodedData(unsigned char* data, const unsigned int numBytes)
     {
     boost::mutex::scoped_lock lock(this->EncodedBufferMutex);
     this->EncodedBufferNotEmpty.wait(lock,
@@ -93,7 +96,7 @@ public:
 
     unsigned int count = std::min(numBytes,
       static_cast<unsigned int>(this->EncodedBuffer.size()));
-    std::copy(this->EncodedBuffer.begin(), data, data+count);
+    memcpy(&this->EncodedBuffer[0], data, count);
     this->EncodedBuffer.erase_begin(count);
     lock.unlock();
 

@@ -19,6 +19,9 @@ protected slots:
   void audioInput2Changed(int);
   void audioOutputChanged(int);
 
+  void startServer();
+  void connectToServer();
+  void disconnect();
 protected:
   void queryAvailableDevices();
 
