@@ -73,16 +73,6 @@ void qcNetwork::readPendingDatagrams()
 //-----------------------------------------------------------------------------
 void qcNetwork::run()
 {
-  unsigned char *data = new unsigned char[1024];
-  QUdpSocket sendSocket;
-  // FIXME: add logic to terminate gracefully.
-  while (qcApp::Dispatcher.popEncodedData(data, 1024) > 0)
-    {
-    quint16 bytesSent = sendSocket.writeDatagram(
-      reinterpret_cast<char*>(data), 1024,
-      this->Internals->DestinationAddr, this->Internals->DestinationPort);
-    }
-  delete [] data;
 }
 
 //-----------------------------------------------------------------------------

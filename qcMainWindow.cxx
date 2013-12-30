@@ -18,7 +18,7 @@
 
 class qcMainWindow::qcInternals
 {
-  static qcBuffer<float, 2, 2> Buffer;
+  static qcBuffer<float, 3, 2> Buffer;
 public:
   Ui::QCMainWindow Ui;
   QPointer<qcNetwork> Network;
@@ -92,7 +92,7 @@ public:
     unsigned int sampleRate = 48000;
 
     RtAudio::StreamOptions options;
-    options.flags = RTAUDIO_MINIMIZE_LATENCY;
+   // options.flags = RTAUDIO_MINIMIZE_LATENCY;
 
     Ui::QCMainWindow& ui = this->Ui;
 
@@ -108,7 +108,9 @@ public:
       {
       if (params[cc].deviceId != -1)
         {
-        unsigned int bufferFrames = 0;
+        // indicate how many frames to buffer. Too low a rate results in jitter
+        // sounds since mutex overheads take over.
+        unsigned int bufferFrames = 120;
         if (cc == OUTPUT)
           {
           this->Audio[cc].openStream(&params[cc], NULL, format, sampleRate,
@@ -177,7 +179,7 @@ public:
     }
 };
 
-qcBuffer<float, 2, 2> qcMainWindow::qcInternals::Buffer;
+qcBuffer<float, 3, 2> qcMainWindow::qcInternals::Buffer;
 
 //-----------------------------------------------------------------------------
 qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
@@ -372,11 +374,8 @@ void qcMainWindow::connectToServer()
   ui.actionDisconnect->setEnabled(true);
   ui.actionConnect_To_Server->setEnabled(false);
 
-  if (this->Internals->Network == NULL)
-    {
-    this->Internals->Network = new qcNetwork(this);
-    }
-  this->Internals->Network->connectToHost(
+  // FIXME: Use real hostname and portnumber.
+  qcApp::Dispatcher.setDestination(
     QHostAddress::LocalHost, portNumber);
 }
 
@@ -392,6 +391,9 @@ void qcMainWindow::disconnect()
     {
     delete this->Internals->Network;
     }
+
+  // clear destination.
+  qcApp::Dispatcher.setDestination(QHostAddress(), 0);
 }
 
 //-----------------------------------------------------------------------------

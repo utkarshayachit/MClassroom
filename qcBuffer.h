@@ -28,7 +28,7 @@ public:
     {
     for (unsigned int cc=0; cc < numFeeders; cc++)
       {
-      this->Buffers[cc].set_capacity(128*numChannelsPerFeeder);
+      this->Buffers[cc].set_capacity(2880*numChannelsPerFeeder);
       }
     }
 
