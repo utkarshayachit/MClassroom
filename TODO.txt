@@ -1,0 +1,7 @@
+TODO List
+==========
+
+* Add ability to swap network protocol -- would need TCP to use this for my
+  use-case.
+
+* Explore NAT traversal options.
