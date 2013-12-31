@@ -4,8 +4,6 @@
 #include "qcBuffer.h"
 
 #include <QThread>
-#include <QUdpSocket>
-#include <QHostAddress>
 
 #include <map>
 #include <vector>
@@ -16,7 +14,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/bind.hpp>
 
-template <class T, unsigned int numChannels>
+template <class T, unsigned int numChannels, class NetworkProtocolSend>
 class qcDispatcher
 {
 private:
@@ -26,14 +24,14 @@ private:
   boost::condition BufferNotEmpty;
   boost::mutex BufferMutex;
 
-  std::pair<QHostAddress, quint16> Destination;
-  boost::mutex DestinationMutex;
+  boost::shared_ptr<NetworkProtocolSend> Protocol;
+  boost::mutex ProtocolMutex;
 
   class qcDispatcherThread : public QThread
   {
-  qcDispatcher<T, numChannels>& Self;
+  qcDispatcher<T, numChannels, NetworkProtocolSend>& Self;
 public:
-  qcDispatcherThread(qcDispatcher<T, numChannels>& self)
+  qcDispatcherThread(qcDispatcher<T, numChannels, NetworkProtocolSend>& self)
     : Self(self)
     {
     }
@@ -44,15 +42,14 @@ protected:
   virtual void run()
     {
     unsigned char *data = new unsigned char[1024];
-    QUdpSocket sendSocket;
     while (unsigned int packet_size = this->Self.popEncodedData(data, 1024))
       {
-      std::pair<QHostAddress, quint16> reply = this->Self.destination();
-      if (!reply.first.isNull() && reply.second > 0)
+      boost::mutex::scoped_lock lock(this->Self.ProtocolMutex);
+      if (this->Self.Protocol)
         {
-        quint16 bytesSent = sendSocket.writeDatagram(
-          reinterpret_cast<char*>(data), packet_size, reply.first, reply.second);
+        this->Self.Protocol->sendPacket(data, packet_size);
         }
+      lock.unlock();
       }
     delete [] data;
     cout << "Quitting receiver thread." << endl;
@@ -61,14 +58,15 @@ private:
   Q_DISABLE_COPY(qcDispatcherThread);
   };
 
+  friend class qcDispatcherThread;
   qcDispatcherThread SenderThread;
   bool Abort;
 public:
   qcDispatcher() :
     EncodingBuffer(new T[2880 * numChannels]), // maximum frame size per encode call.
-    SenderThread(*this)
+    SenderThread(*this),
+    Abort(false)
     {
-
     int error;
     this->Encoder = opus_encoder_create(
       /*sample rate=*/48000,
@@ -91,23 +89,23 @@ public:
     }
 
   // @threadsafe
-  // Specify the destination where to ship packets.
-  void setDestination(const QHostAddress& addr, quint16 port)
+  // Specify the communicator to use to send data. Set to NULL to stop
+  // communication.
+  void setProtocol(boost::shared_ptr<NetworkProtocolSend> protocol)
     {
-    boost::mutex::scoped_lock lock(this->DestinationMutex);
-    this->Destination = std::pair<QHostAddress, quint16>(addr, port);
-    if (!this->SenderThread.isRunning())
+    boost::mutex::scoped_lock lock(this->ProtocolMutex);
+    this->Protocol = protocol;
+    if (protocol && !this->SenderThread.isRunning())
       {
+      boost::mutex::scoped_lock lock(this->BufferMutex);
+      this->Abort = false;
       this->SenderThread.start();
       }
-    }
-
-  // @threadsafe
-  std::pair<QHostAddress, quint16> destination()
-    {
-    boost::mutex::scoped_lock lock(this->DestinationMutex);
-    std::pair<QHostAddress, quint16> reply = this->Destination;
-    return reply;
+    else if (!protocol && this->SenderThread.isRunning())
+      {
+      boost::mutex::scoped_lock lock(this->BufferMutex);
+      this->Abort = true;
+      }
     }
 
   // @threadsafe
@@ -130,7 +128,7 @@ private:
     boost::mutex::scoped_lock lock(this->BufferMutex);
     while (!this->BufferNotEmpty.timed_wait(lock,
       boost::posix_time::seconds(0.1),
-      boost::bind(&qcDispatcher<T, numChannels>::bufferNotEmpty, this)))
+      boost::bind(&qcDispatcher<T, numChannels, NetworkProtocolSend>::bufferNotEmpty, this)))
       {
       // timed out.
       if (this->Abort)

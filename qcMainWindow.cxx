@@ -392,8 +392,11 @@ void qcMainWindow::connectToServer()
   ui.actionConnect_To_Server->setEnabled(false);
 
   // FIXME: Use real hostname and portnumber.
-  qcApp::Dispatcher.setDestination(
-    QHostAddress::LocalHost, portNumber);
+  boost::shared_ptr<qcQUdpNetworkProtocolSend> sender(
+    new qcQUdpNetworkProtocolSend(QHostAddress::LocalHost, portNumber));
+  qcApp::Dispatcher.setProtocol(sender);
+/// qcApp::Dispatcher.setDestination(
+/// QHostAddress::LocalHost, portNumber);
 }
 
 //-----------------------------------------------------------------------------
@@ -409,8 +412,9 @@ void qcMainWindow::disconnect()
   delete this->Internals->Receiver;
   this->Internals->Receiver = NULL;
 
+  qcApp::Dispatcher.setProtocol(boost::shared_ptr<qcQUdpNetworkProtocolSend>());
   // clear destination.
-  qcApp::Dispatcher.setDestination(QHostAddress(), 0);
+ // qcApp::Dispatcher.setDestination(QHostAddress(), 0);
 }
 
 //-----------------------------------------------------------------------------

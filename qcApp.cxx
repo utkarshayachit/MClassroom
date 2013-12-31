@@ -1,6 +1,6 @@
 #include "qcApp.h"
 
-qcDispatcher<float, 2> qcApp::Dispatcher;
+qcDispatcher<float, 2, qcQUdpNetworkProtocolSend> qcApp::Dispatcher;
 qcBuffer<float, 3, 2> qcApp::AudioStream;
 
 //-----------------------------------------------------------------------------
