@@ -14,21 +14,19 @@
 
 #include "qcApp.h"
 #include "qcBuffer.h"
-#include "qcReceiver.h"
+#include "qcQUdpNetworkProtocol.h"
 
 class qcMainWindow::qcInternals
 {
 public:
   Ui::QCMainWindow Ui;
-  qcReceiver<float, 2>* Receiver;
 
-  qcInternals(qcMainWindow* self) : Receiver(NULL)
+  qcInternals(qcMainWindow* self)
     {
     this->Ui.setupUi(self);
     }
   ~qcInternals()
     {
-    delete this->Receiver;
     }
 
   void updateUi(RtAudio::DeviceInfo& info, QComboBox* format, QComboBox* rate)
@@ -378,8 +376,8 @@ void qcMainWindow::startServer()
   ui.gainRemote->setEnabled(true);
   ui.audioRemote->addItem("When connected");
 
-  delete this->Internals->Receiver;
-  this->Internals->Receiver = new qcReceiver<float, 2>(portNumber);
+  boost::shared_ptr<qcReceiverBase> decoder(new qcReceiver<float, 2>());
+  qcApp::Receiver.reset(new qcQUdpNetworkProtocolReceive(portNumber, decoder));
 }
 
 //-----------------------------------------------------------------------------
@@ -395,8 +393,6 @@ void qcMainWindow::connectToServer()
   boost::shared_ptr<qcQUdpNetworkProtocolSend> sender(
     new qcQUdpNetworkProtocolSend(QHostAddress::LocalHost, portNumber));
   qcApp::Dispatcher.setProtocol(sender);
-/// qcApp::Dispatcher.setDestination(
-/// QHostAddress::LocalHost, portNumber);
 }
 
 //-----------------------------------------------------------------------------
@@ -409,12 +405,8 @@ void qcMainWindow::disconnect()
   ui.gainRemote->setEnabled(false);
   ui.audioRemote->clear();
 
-  delete this->Internals->Receiver;
-  this->Internals->Receiver = NULL;
-
   qcApp::Dispatcher.setProtocol(boost::shared_ptr<qcQUdpNetworkProtocolSend>());
-  // clear destination.
- // qcApp::Dispatcher.setDestination(QHostAddress(), 0);
+  qcApp::Receiver.reset();
 }
 
 //-----------------------------------------------------------------------------
