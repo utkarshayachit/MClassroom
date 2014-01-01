@@ -297,8 +297,7 @@
     <property name="title">
      <string>Network</string>
     </property>
-    <addaction name="actionConnect_To_Server"/>
-    <addaction name="actionStart_Server"/>
+    <addaction name="actionConnect"/>
     <addaction name="actionDisconnect"/>
    </widget>
    <addaction name="menu_Menu"/>
@@ -315,8 +314,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionConnect_To_Server"/>
-   <addaction name="actionStart_Server"/>
+   <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
   </widget>
   <action name="actionExit">
@@ -327,22 +325,20 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionConnect_To_Server">
-   <property name="text">
-    <string>Connect To Remote</string>
-   </property>
-  </action>
-  <action name="actionStart_Server">
-   <property name="text">
-    <string>Listen to Remote</string>
-   </property>
-  </action>
   <action name="actionDisconnect">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Disconnect</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+   <property name="toolTip">
+    <string>Connect with your peer</string>
    </property>
   </action>
  </widget>

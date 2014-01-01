@@ -1,5 +1,6 @@
 #include "qcMainWindow.h"
 #include "ui_qcMainWindow.h"
+#include "ui_qcNiceConnectionDialog.h"
 
 #include "RtAudio.h"
 #include <map>
@@ -15,6 +16,7 @@
 #include "qcApp.h"
 #include "qcBuffer.h"
 #include "qcQUdpNetworkProtocol.h"
+#include "qcNiceProtocol.h"
 
 class qcMainWindow::qcInternals
 {
@@ -193,9 +195,8 @@ qcMainWindow::qcMainWindow() : Internals(new qcInternals(this))
 
   QObject::connect(ui.startButton, SIGNAL(clicked()), this, SLOT(start()));
   QObject::connect(ui.stopButton, SIGNAL(clicked()), this, SLOT(stop()));
-  this->connect(ui.actionStart_Server, SIGNAL(triggered()), SLOT(startServer()));
-  this->connect(ui.actionConnect_To_Server, SIGNAL(triggered()), SLOT(connectToServer()));
-  this->connect(ui.actionDisconnect, SIGNAL(triggered()), SLOT(disconnect()));
+  this->connect(ui.actionConnect, SIGNAL(triggered()), SLOT(connectToPeer()));
+  this->connect(ui.actionDisconnect, SIGNAL(triggered()), SLOT(disconnectFromPeer()));
 
   ui.gainInput1->setProperty("Index", QVariant(0));
   ui.gainInput2->setProperty("Index", QVariant(1));
@@ -362,51 +363,49 @@ void qcMainWindow::stop()
   ui.rateOutput->setEnabled(true);
   this->Internals->stopAudio();
 }
+boost::shared_ptr<qcNiceProtocol> Protocol;
 
 //-----------------------------------------------------------------------------
-void qcMainWindow::startServer()
+void qcMainWindow::connectToPeer()
 {
-  int portNumber = QInputDialog::getInt(this, "Server Port Number",
-    "Enter Server Port Number: ", 11111, 1000);
+  Protocol.reset(new qcNiceProtocol(QHostAddress("107.23.150.92")));
 
-  Ui::QCMainWindow &ui = this->Internals->Ui;
-  ui.actionDisconnect->setEnabled(true);
-  ui.actionStart_Server->setEnabled(false);
-
-  ui.gainRemote->setEnabled(true);
-  ui.audioRemote->addItem("When connected");
-
-  boost::shared_ptr<qcReceiverBase> decoder(new qcReceiver<float, 2>());
-  qcApp::Receiver.reset(new qcQUdpNetworkProtocolReceive(portNumber, decoder));
+  QDialog dialog(this);
+  Ui::NiceConnectionDialog ui;
+  ui.setupUi(&dialog);
+  ui.selfID->setPlainText(Protocol->ticket());
+  if (dialog.exec() == QDialog::Accepted &&
+    Protocol->connect(ui.peerID->toPlainText()) == true)
+    {
+    this->Internals->Ui.actionDisconnect->setEnabled(true);
+    this->Internals->Ui.actionConnect->setEnabled(false);
+    this->Internals->Ui.gainRemote->setEnabled(true);
+    this->Internals->Ui.audioRemote->addItem("Peer");
+    }
+  else
+    {
+    Protocol.reset();
+    }
+//  boost::shared_ptr<qcReceiverBase> decoder(new qcReceiver<float, 2>());
+//  qcApp::Receiver.reset(new qcQUdpNetworkProtocolReceive(portNumber, decoder));
+//  boost::shared_ptr<qcQUdpNetworkProtocolSend> sender(
+//    new qcQUdpNetworkProtocolSend(QHostAddress::LocalHost, portNumber));
+//  qcApp::Dispatcher.setProtocol(sender);
 }
 
 //-----------------------------------------------------------------------------
-void qcMainWindow::connectToServer()
-{
-  int portNumber = QInputDialog::getInt(this, "Remote Server Port Number",
-    "Enter Remote Server Port Number: ", 11112, 1000);
-  Ui::QCMainWindow &ui = this->Internals->Ui;
-  ui.actionDisconnect->setEnabled(true);
-  ui.actionConnect_To_Server->setEnabled(false);
-
-  // FIXME: Use real hostname and portnumber.
-  boost::shared_ptr<qcQUdpNetworkProtocolSend> sender(
-    new qcQUdpNetworkProtocolSend(QHostAddress::LocalHost, portNumber));
-  qcApp::Dispatcher.setProtocol(sender);
-}
-
-//-----------------------------------------------------------------------------
-void qcMainWindow::disconnect()
+void qcMainWindow::disconnectFromPeer()
 {
   Ui::QCMainWindow &ui = this->Internals->Ui;
   ui.actionDisconnect->setEnabled(false);
-  ui.actionConnect_To_Server->setEnabled(true);
-  ui.actionStart_Server->setEnabled(true);
+  ui.actionConnect->setEnabled(true);
   ui.gainRemote->setEnabled(false);
   ui.audioRemote->clear();
 
-  qcApp::Dispatcher.setProtocol(boost::shared_ptr<qcQUdpNetworkProtocolSend>());
-  qcApp::Receiver.reset();
+  Protocol.reset();
+
+//  qcApp::Dispatcher.setProtocol(boost::shared_ptr<qcQUdpNetworkProtocolSend>());
+//  qcApp::Receiver.reset();
 }
 
 //-----------------------------------------------------------------------------

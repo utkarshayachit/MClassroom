@@ -20,9 +20,8 @@ protected slots:
   void audioOutputChanged(int);
   void gainChanged(int gain);
 
-  void startServer();
-  void connectToServer();
-  void disconnect();
+  void connectToPeer();
+  void disconnectFromPeer();
 protected:
   void queryAvailableDevices();
 
