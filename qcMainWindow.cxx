@@ -363,34 +363,49 @@ void qcMainWindow::stop()
   ui.rateOutput->setEnabled(true);
   this->Internals->stopAudio();
 }
-boost::shared_ptr<qcNiceProtocol> Protocol;
 
+#include <QMessageBox>
 //-----------------------------------------------------------------------------
 void qcMainWindow::connectToPeer()
 {
-  Protocol.reset(new qcNiceProtocol(QHostAddress("107.23.150.92")));
+  QMessageBox information(
+    QMessageBox::Information,
+    "Connecting ...",
+    "We are gathering information about your connection\n"
+    "please be patient.",
+    QMessageBox::NoButton,
+    this);
+  information.show();
+  qcApp::CommunicationChannel.reset(new qcNiceProtocol(QHostAddress("107.23.150.92")));
+  qcApp::Receiver.reset();
+  information.hide();
 
   QDialog dialog(this);
   Ui::NiceConnectionDialog ui;
   ui.setupUi(&dialog);
-  ui.selfID->setPlainText(Protocol->ticket());
-  if (dialog.exec() == QDialog::Accepted &&
-    Protocol->connect(ui.peerID->toPlainText()) == true)
+  ui.selfID->setPlainText(qcApp::CommunicationChannel->ticket());
+  if (dialog.exec() == QDialog::Accepted)
     {
-    this->Internals->Ui.actionDisconnect->setEnabled(true);
-    this->Internals->Ui.actionConnect->setEnabled(false);
-    this->Internals->Ui.gainRemote->setEnabled(true);
-    this->Internals->Ui.audioRemote->addItem("Peer");
+    information.setText("We will now try to connect using the key you entered. \n"
+      "This may take a while. Please be patient.");
+    information.show();
+    if (qcApp::CommunicationChannel->connect(ui.peerID->toPlainText()) == true)
+      {
+      this->Internals->Ui.actionDisconnect->setEnabled(true);
+      this->Internals->Ui.actionConnect->setEnabled(false);
+      this->Internals->Ui.gainRemote->setEnabled(true);
+      this->Internals->Ui.audioRemote->addItem("Peer");
+
+      qcApp::Dispatcher.setProtocol(qcApp::CommunicationChannel);
+      qcApp::Receiver.reset(new qcReceiver<float, 2>());
+      return;
+      }
     }
-  else
-    {
-    Protocol.reset();
-    }
-//  boost::shared_ptr<qcReceiverBase> decoder(new qcReceiver<float, 2>());
-//  qcApp::Receiver.reset(new qcQUdpNetworkProtocolReceive(portNumber, decoder));
-//  boost::shared_ptr<qcQUdpNetworkProtocolSend> sender(
-//    new qcQUdpNetworkProtocolSend(QHostAddress::LocalHost, portNumber));
-//  qcApp::Dispatcher.setProtocol(sender);
+  information.hide();
+  qcApp::CommunicationChannel.reset();
+  QMessageBox::critical(this, "Connection Failed!!!",
+    "Alas! The connection failed for unknown reasons.\n"
+    "Please try again. Ensure that your 'connection identifier' is correct.");
 }
 
 //-----------------------------------------------------------------------------
@@ -402,10 +417,9 @@ void qcMainWindow::disconnectFromPeer()
   ui.gainRemote->setEnabled(false);
   ui.audioRemote->clear();
 
-  Protocol.reset();
-
-//  qcApp::Dispatcher.setProtocol(boost::shared_ptr<qcQUdpNetworkProtocolSend>());
-//  qcApp::Receiver.reset();
+  qcApp::CommunicationChannel.reset();
+  qcApp::Receiver.reset();
+  qcApp::Dispatcher.setProtocol(qcApp::CommunicationChannel);
 }
 
 //-----------------------------------------------------------------------------

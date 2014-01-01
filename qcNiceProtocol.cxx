@@ -1,7 +1,10 @@
 #include "qcNiceProtocol.h"
 
 #include "qcApp.h"
+#include "qcReceiver.h"
+
 #include <QtDebug>
+#include <QTimer>
 
 extern "C"
 {
@@ -46,17 +49,19 @@ class qcNiceProtocol::qcInternals
   static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
     guint len, gchar *buf, gpointer data)
     {
-    qDebug() << "cb_nice_recv" << endl;
-    if (len == 1 && buf[0] == '\0') { }
-      // g_main_loop_quit ();
-    printf("%.*s", len, buf);
-    fflush(stdout);
+    if (qcApp::Receiver)
+      {
+      qcApp::Receiver->processDatagram(
+        reinterpret_cast<const unsigned char*>(buf),
+        static_cast<unsigned int>(len));
+      }
     }
 
 public:
   NiceAgent* Agent;
   guint StreamId;
   GMainLoop* GLoop;
+  QTimer Timer;
 
   qcInternals()
     : Agent(NULL), StreamId(0), GLoop(NULL)
@@ -130,6 +135,10 @@ qcNiceProtocol::qcNiceProtocol(const QHostAddress& server, quint16 port)
 {
   // this must be the last call.
   this->Internals->init(server, port, this);
+  this->Internals->Timer.setInterval(0);
+  this->Internals->Timer.setSingleShot(true);
+  this->Superclass::connect(&this->Internals->Timer, SIGNAL(timeout()),
+    SLOT(processEvents()));
 }
 
 //-----------------------------------------------------------------------------
@@ -171,7 +180,28 @@ bool qcNiceProtocol::connect(const QString& remote)
     qCritical() << "Incorrect ticket. Try again.";
     return false;
     }
+  this->Internals->Timer.start();
   return true;
 }
 
 //-----------------------------------------------------------------------------
+void qcNiceProtocol::sendPacket(const unsigned char* packet, unsigned int packet_size)
+{
+  Q_ASSERT (this->Internals->Agent);
+  guint bytesSent = nice_agent_send(this->Internals->Agent,
+    this->Internals->StreamId,
+    NICE_COMPONENT_TYPE_RTP,
+    packet_size,
+    reinterpret_cast<const gchar*>(packet));
+  cout << "Send: " << bytesSent << endl;
+}
+
+//-----------------------------------------------------------------------------
+void qcNiceProtocol::processEvents()
+{
+  if (this->Internals->GLoop)
+    {
+    g_main_context_iteration(g_main_loop_get_context(this->Internals->GLoop), false);
+    this->Internals->Timer.start();
+    }
+}

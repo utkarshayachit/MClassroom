@@ -18,8 +18,13 @@ public:
   // return my connection ticket. Empty if setup failed.
   const QString& ticket() const
     { return this->Ticket; }
-
   bool connect(const QString& remoteTicket);
+
+  // send a packet.
+  void sendPacket(const unsigned char* packet, unsigned int packet_size);
+
+private slots:
+  void processEvents();
 
 private:
   // We know information about ourselves. Let the UI display this information so
