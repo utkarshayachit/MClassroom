@@ -94,6 +94,7 @@ public:
       "stun-server", host,
       "stun-server-port", static_cast<guint>(port),
       "controlling-mode", 0,
+      "reliable", TRUE,
       NULL);
 
     // connect signals
