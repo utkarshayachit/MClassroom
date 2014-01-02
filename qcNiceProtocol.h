@@ -2,7 +2,6 @@
 #define __qcNiceProtocol_h
 
 
-#include <QHostAddress>
 #include <QObject>
 
 class qcNiceProtocol : public QObject
@@ -12,7 +11,7 @@ class qcNiceProtocol : public QObject
 
 public:
   qcNiceProtocol(
-    const QHostAddress& stunServer, quint16 stunServerPort=3478);
+    const char* stunServer, quint16 stunServerPort=3478);
   ~qcNiceProtocol();
 
   // return my connection ticket. Empty if setup failed.

@@ -7,7 +7,7 @@ set(CMAKE_MACOSX_RPATH 1)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
-find_package(Qt4 4.8 REQUIRED QtCore QtGui QtNetwork)
+find_package(Qt4 4.8 REQUIRED QtCore QtGui)
 include(${QT_USE_FILE})
 
 
@@ -22,6 +22,11 @@ find_package(Boost REQUIRED thread system
 # RTAudio is used for Audio runtime.
 find_library(RTAUDIO_LIBRARY NAMES rtaudio)
 find_path(RTAUDIO_INCLUDE_DIR NAMES RtAudio.h)
+
+if (APPLE)
+   find_library(COREAUDIO_LIBRARY CoreAudio)
+   find_library(COREFOUNDATION_LIBRARY CoreFoundation)
+endif()
 
 if (NOT RTAUDIO_INCLUDE_DIR OR NOT RTAUDIO_LIBRARY)
   message(FATAL "Missing RtAudio.")
@@ -53,7 +58,7 @@ endif()
 
 qt4_wrap_cpp(moc_srs
   qcMainWindow.h
-  qcQUdpNetworkProtocol.h
+#  qcQUdpNetworkProtocol.h
   qcNiceProtocol.h
 )
 
@@ -76,7 +81,7 @@ add_executable(QtClassroom MACOSX_BUNDLE
   qcApp.h
   qcMainWindow.cxx
   qcMainWindow.h
-  qcQUdpNetworkProtocol.h
+#  qcQUdpNetworkProtocol.h
   qcReceiver.h
   qcNiceProtocol.h
   qcNiceProtocol.cxx
@@ -88,7 +93,22 @@ target_link_libraries(QtClassroom ${QT_LIBRARIES}
   ${Boost_LIBRARIES}
   ${NICE_LIBRARY}
 #  ${GLIB2_LIBRARIES}
-  /usr/local/Cellar/glib/2.38.2/lib/libglib-2.0.dylib
-  /usr/local/Cellar/glib/2.38.2/lib/libgobject-2.0.dylib
-  /usr/local/Cellar/glib/2.38.2/lib/libgio-2.0.dylib
+  /usr/local/Cellar/glib/2.38.2/lib/libglib-2.0.0.dylib
+  /usr/local/Cellar/glib/2.38.2/lib/libgobject-2.0.0.dylib
+  /usr/local/Cellar/glib/2.38.2/lib/libgio-2.0.0.dylib
+
+  ${COREFOUNDATION_LIBRARY}
+  ${COREAUDIO_LIBRARY}
   )
+#set_target_properties(QtClassroom PROPERTIES INSTALL_RPATH
+#  "@executable_path/../Libraries:@executable_path/../Frameworks")
+
+install(TARGETS QtClassroom
+        DESTINATION bin)
+install(FILES
+  /usr/local/Cellar/glib/2.38.2/lib/libglib-2.0.0.dylib
+  /usr/local/Cellar/glib/2.38.2/lib/libgobject-2.0.0.dylib
+  /usr/local/Cellar/glib/2.38.2/lib/libgio-2.0.0.dylib
+  DESTINATION lib)
+
+

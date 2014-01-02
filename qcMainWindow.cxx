@@ -12,11 +12,12 @@
 #include <QtDebug>
 #include <QPointer>
 #include <QInputDialog>
+#include <QMessageBox>
 
 #include "qcApp.h"
 #include "qcBuffer.h"
-#include "qcQUdpNetworkProtocol.h"
 #include "qcNiceProtocol.h"
+#include "qcReceiver.h"
 
 class qcMainWindow::qcInternals
 {
@@ -364,7 +365,6 @@ void qcMainWindow::stop()
   this->Internals->stopAudio();
 }
 
-#include <QMessageBox>
 //-----------------------------------------------------------------------------
 void qcMainWindow::connectToPeer()
 {
@@ -376,7 +376,7 @@ void qcMainWindow::connectToPeer()
     QMessageBox::NoButton,
     this);
   information.show();
-  qcApp::CommunicationChannel.reset(new qcNiceProtocol(QHostAddress("107.23.150.92")));
+  qcApp::CommunicationChannel.reset(new qcNiceProtocol("107.23.150.92"));
   qcApp::Receiver.reset();
   information.hide();
 

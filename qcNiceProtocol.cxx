@@ -77,7 +77,7 @@ public:
     this->GLoop = NULL;
     }
 
-  void init(const QHostAddress& host, quint16 port, qcNiceProtocol* self)
+  void init(const char* host, quint16 port, qcNiceProtocol* self)
     {
     this->GLoop = g_main_loop_new(NULL, FALSE);
 
@@ -85,13 +85,13 @@ public:
       NICE_COMPATIBILITY_RFC5245);
     Q_ASSERT(this->Agent);
 
-    qDebug() << "STUN Server: " << host.toString() << ":" << port;
+    qDebug() << "STUN Server: " << host << ":" << port;
 
     NiceAgent* agent = this->Agent;
 
     // Set STUN settings (I'm skipping controlling mode too see what happens).
     g_object_set(G_OBJECT(agent),
-      "stun-server", host.toString().toAscii().data(),
+      "stun-server", host,
       "stun-server-port", static_cast<guint>(port),
       "controlling-mode", 0,
       NULL);
@@ -130,7 +130,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-qcNiceProtocol::qcNiceProtocol(const QHostAddress& server, quint16 port)
+qcNiceProtocol::qcNiceProtocol(const char* server, quint16 port)
 : Internals(new qcNiceProtocol::qcInternals())
 {
   // this must be the last call.
