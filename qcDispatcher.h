@@ -118,7 +118,7 @@ public:
     }
 
 private:
-  bool bufferNotEmpty() { return this->Buffer.availableFrames() >= 120; }
+  bool bufferNotEmpty() { return this->Buffer.availableFrames() >= 240; }
 
   // @threadsafe
   // pop encoded packet from the queue upto numBytes. This call will block until
