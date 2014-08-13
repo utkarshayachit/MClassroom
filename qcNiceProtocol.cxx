@@ -56,6 +56,11 @@ class qcNiceProtocol::qcInternals
         static_cast<unsigned int>(len));
       }
     }
+  static void cb_reliable_transport_writable(NiceAgent* agent, guint stream_id, guint component_id,
+     gpointer data)
+    {
+    cout << "cb_reliable_transport_writable" << endl;
+    }
 
 public:
   NiceAgent* Agent;
@@ -81,7 +86,9 @@ public:
     {
     this->GLoop = g_main_loop_new(NULL, FALSE);
 
-    this->Agent = nice_agent_new(g_main_loop_get_context(this->GLoop),
+    //this->Agent = nice_agent_new(g_main_loop_get_context(this->GLoop),
+    //  NICE_COMPATIBILITY_RFC5245);
+    this->Agent = nice_agent_new_reliable(g_main_loop_get_context(this->GLoop),
       NICE_COMPATIBILITY_RFC5245);
     Q_ASSERT(this->Agent);
 
@@ -108,6 +115,9 @@ public:
       self);
     //g_signal_connect (G_OBJECT (agent), "new-selected-pair",
     //  G_CALLBACK (qcNiceProtocol::cb_new_selected_pair), NULL);
+    g_signal_connect(G_OBJECT(agent), "reliable-transport-writable",
+      G_CALLBACK(qcNiceProtocol::qcInternals::cb_reliable_transport_writable),
+      self);
 
     // create a new stream with 1 component and start gathering candidates.
     this->StreamId = nice_agent_add_stream(this->Agent, 1);
@@ -194,7 +204,7 @@ void qcNiceProtocol::sendPacket(const unsigned char* packet, unsigned int packet
     NICE_COMPONENT_TYPE_RTP,
     packet_size,
     reinterpret_cast<const gchar*>(packet));
-  cout << "Send: " << bytesSent << endl;
+  cout << "Sent: " << bytesSent << " of " << packet_size << endl;
 }
 
 //-----------------------------------------------------------------------------

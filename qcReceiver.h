@@ -40,6 +40,11 @@ public:
     int availableFrames = opus_decode_float(
       this->Decoder, packet, size, this->DecodingBuffer, 5760, 0);
     cout << "Processed: " << availableFrames << " frames" << endl;
+    if (availableFrames < 0)
+      {
+      cout << "Invalid packet, ignoring" << endl;
+      return;
+      }
     qcApp::AudioStream.push(2, this->DecodingBuffer, availableFrames);
     }
 };
