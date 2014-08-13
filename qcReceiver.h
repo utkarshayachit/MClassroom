@@ -3,6 +3,7 @@
 
 #include "qcApp.h"
 #include <opus/opus.h>
+#include <cassert>
 
 class qcReceiverBase
 {
@@ -22,8 +23,14 @@ public:
     DecodingBuffer(new T[5760 * numChannels]) // maximum frame size per decode call.
   {
   int error;
+  // Opus only supports these sample rates: 8000, 12000, 16000, 24000, or 48000
+  assert(qcApp::SampleRate == 8000 ||
+    qcApp::SampleRate == 12000 ||
+    qcApp::SampleRate == 16000 ||
+    qcApp::SampleRate == 24000 ||
+    qcApp::SampleRate == 48000);
   this->Decoder = opus_decoder_create(
-    /*sample rate=*/ 48000,
+    /*sample rate=*/ qcApp::SampleRate,
     /*channels=*/numChannels,
     &error);
   }
@@ -39,7 +46,7 @@ public:
     {
     int availableFrames = opus_decode_float(
       this->Decoder, packet, size, this->DecodingBuffer, 5760, 0);
-    cout << "Processed: " << availableFrames << " frames" << endl;
+    //cout << "Processed: " << availableFrames << " frames" << endl;
     if (availableFrames < 0)
       {
       cout << "Invalid packet, ignoring" << endl;

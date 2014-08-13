@@ -204,7 +204,11 @@ void qcNiceProtocol::sendPacket(const unsigned char* packet, unsigned int packet
     NICE_COMPONENT_TYPE_RTP,
     packet_size,
     reinterpret_cast<const gchar*>(packet));
-  cout << "Sent: " << bytesSent << " of " << packet_size << endl;
+//  cout << "Sent: " << bytesSent << " of " << packet_size << endl;
+  if (bytesSent != packet_size)
+    {
+    cout << "Sent: " << bytesSent << " of " << packet_size << endl;
+    }
 }
 
 //-----------------------------------------------------------------------------

@@ -68,6 +68,7 @@ public:
     Abort(false)
     {
     int error;
+
     this->Encoder = opus_encoder_create(
       /*sample rate=*/48000,
       /*channels=*/numChannels,

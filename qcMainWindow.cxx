@@ -89,7 +89,7 @@ public:
   void startAudio()
     {
     unsigned long format = RTAUDIO_FLOAT32;
-    unsigned int sampleRate = 44100;
+    unsigned int sampleRate = qcApp::SampleRate;
 
     RtAudio::StreamOptions options;
    // options.flags = RTAUDIO_MINIMIZE_LATENCY;
