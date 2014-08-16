@@ -6,6 +6,7 @@
 #include <QtDebug>
 #include <QTimer>
 
+#include <boost/circular_buffer.hpp>
 extern "C"
 {
 #include <nice/agent.h>
@@ -49,11 +50,37 @@ class qcNiceProtocol::qcInternals
   static void cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id,
     guint len, gchar *buf, gpointer data)
     {
-    if (qcApp::Receiver)
+    if (qcApp::Receiver == NULL) { return; }
+    static boost::circular_buffer<unsigned char> packetBuffer(1024*1024);
+    packetBuffer.insert(packetBuffer.end(),
+      reinterpret_cast<unsigned char*>(buf),
+      reinterpret_cast<unsigned char*>(buf) + len);
+
+    // so we can access data directly.
+    packetBuffer.linearize();
+
+    unsigned int header[3] = {0xFF00FE00, 0, 0xFF00FD00};
+    const size_t headerSize = 3* sizeof(unsigned int);
+    while (packetBuffer.size() >= headerSize)
       {
-      qcApp::Receiver->processDatagram(
-        reinterpret_cast<const unsigned char*>(buf),
-        static_cast<unsigned int>(len));
+      const unsigned int *_h = reinterpret_cast<const unsigned int*>(&packetBuffer[0]);
+      if (_h[0] != header[0] && _h[2] != header[2])
+        {
+        // we must have a broken packet. skip and continue.
+        packetBuffer.pop_front();
+        continue;
+        }
+
+      unsigned int packetSize = _h[1];
+      if (packetBuffer.size() < headerSize + packetSize)
+        {
+        // we don't have enough data yet. try next time.
+        return;
+        }
+
+      packetBuffer.erase_begin(headerSize);
+      qcApp::Receiver->processPacket(&packetBuffer[0], packetSize);
+      packetBuffer.erase_begin(packetSize);
       }
     }
   static void cb_reliable_transport_writable(NiceAgent* agent, guint stream_id, guint component_id,
@@ -199,6 +226,15 @@ bool qcNiceProtocol::connect(const QString& remote)
 void qcNiceProtocol::sendPacket(const unsigned char* packet, unsigned int packet_size)
 {
   Q_ASSERT (this->Internals->Agent);
+
+  unsigned int header[3] = {0xFF00FE00, packet_size, 0xFF00FD00};
+  const size_t headerSize = 3* sizeof(unsigned int);
+  nice_agent_send(this->Internals->Agent,
+    this->Internals->StreamId,
+    NICE_COMPONENT_TYPE_RTP,
+    headerSize,
+    reinterpret_cast<const gchar*>(&header));
+
   guint bytesSent = nice_agent_send(this->Internals->Agent,
     this->Internals->StreamId,
     NICE_COMPONENT_TYPE_RTP,

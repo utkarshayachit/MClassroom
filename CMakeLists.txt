@@ -105,10 +105,12 @@ target_link_libraries(QtClassroom ${QT_LIBRARIES}
 
 install(TARGETS QtClassroom
         DESTINATION bin)
-install(FILES
-  /usr/local/Cellar/glib/2.38.2/lib/libglib-2.0.0.dylib
-  /usr/local/Cellar/glib/2.38.2/lib/libgobject-2.0.0.dylib
-  /usr/local/Cellar/glib/2.38.2/lib/libgio-2.0.0.dylib
-  DESTINATION lib)
+
+# Not needed since macdeployqt copies these files as well.
+##install(FILES
+##  /usr/local/Cellar/glib/2.38.2/lib/libglib-2.0.0.dylib
+##  /usr/local/Cellar/glib/2.38.2/lib/libgobject-2.0.0.dylib
+##  /usr/local/Cellar/glib/2.38.2/lib/libgio-2.0.0.dylib
+##  DESTINATION lib)
 
 

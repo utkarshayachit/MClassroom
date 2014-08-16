@@ -8,7 +8,7 @@
 class qcReceiverBase
 {
 public:
-  virtual void processDatagram(const unsigned char* packet, unsigned int size) = 0;
+  virtual void processPacket(const unsigned char* packet, unsigned int size) = 0;
 };
 
 
@@ -42,7 +42,7 @@ public:
     this->DecodingBuffer = NULL;
     }
 
-  virtual void processDatagram(const unsigned char* packet, unsigned int size)
+  virtual void processPacket(const unsigned char* packet, unsigned int size)
     {
     int availableFrames = opus_decode_float(
       this->Decoder, packet, size, this->DecodingBuffer, 5760, 0);

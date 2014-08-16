@@ -5,3 +5,8 @@ TODO List
   use-case.
 
 * Explore NAT traversal options.
+
+* seems like qcReceiver::processDatagram() receives byte packets of arbitrary
+  sizes, while opus needs packet sizes to match exactly what was obtained after
+  encode(), so we need to add our own mashalling information to indentify
+  packets.
